@@ -29,6 +29,8 @@ extern NSString *const PBYouTubePlayerEventApiChange;
  */
 @interface PBYouTubeVideoViewController : UIViewController
 
+@property (assign, nonatomic) BOOL usesDefaultVideoRatio;
+
 @property (nonatomic, weak) id<PBYouTubeVideoViewControllerDelegate> delegate;
 
 - (id)initWithVideoId:(NSString *)videoId;

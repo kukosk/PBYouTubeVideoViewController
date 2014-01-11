@@ -15,8 +15,6 @@ NSString *const PBYouTubePlayerEventPlaybackRateChanged = @"playbackRateChange";
 NSString *const PBYouTubePlayerEventError = @"error";
 NSString *const PBYouTubePlayerEventApiChange = @"apiChange";
 
-#define LOG_ERROR(x) NSLog(@"[%@ %@] - error: %@", NSStringFromClass([self class]), NSStringFromSelector(_cmd), x)
-
 const CGFloat YouTubeStandardPlayerWidth = 640;
 const CGFloat YouTubeStandardPlayerHeight = 390;
 
@@ -37,6 +35,7 @@ const CGFloat YouTubeStandardPlayerHeight = 390;
 
     if ((self = [super initWithNibName:nil bundle:nil])) {
         self.videoId = videoId;
+		self.usesDefaultVideoRatio = YES;
     }
     return self;
 }
@@ -92,6 +91,20 @@ const CGFloat YouTubeStandardPlayerHeight = 390;
 
 #pragma mark - Accessors
 
+- (void)setUsesDefaultVideoRatio:(BOOL)usesDefaultVideoRatio
+{
+	BOOL oldUsesDefaultVideoRatio = _usesDefaultVideoRatio;
+	_usesDefaultVideoRatio = usesDefaultVideoRatio;
+	
+	if(oldUsesDefaultVideoRatio != self.usesDefaultVideoRatio)
+	{
+		if(self.isViewLoaded)
+		{
+			[self.view setNeedsLayout];
+		}
+	}
+}
+
 - (void)setPlayerSize:(CGSize)playerSize
 {
     [self.webView stringByEvaluatingJavaScriptFromString:
@@ -119,7 +132,7 @@ const CGFloat YouTubeStandardPlayerHeight = 390;
     NSError *error = nil;
     NSString *template = [NSString stringWithContentsOfFile:pathToHTML encoding:NSUTF8StringEncoding error:&error];
     if (error) {
-        LOG_ERROR(error);
+        NSLog(@"%@", error.localizedDescription);
     }
 
     CGSize playerSize = [self playerSize];
@@ -138,11 +151,21 @@ const CGFloat YouTubeStandardPlayerHeight = 390;
 
 - (CGSize)playerSize
 {
-    float heightRatio = self.view.bounds.size.height / YouTubeStandardPlayerHeight;
-    float widthRatio = self.view.bounds.size.width / YouTubeStandardPlayerWidth;
-    float ratio = MIN(widthRatio, heightRatio);
-
-    CGSize playerSize = CGSizeMake(YouTubeStandardPlayerWidth * ratio, YouTubeStandardPlayerHeight * ratio);
+	CGSize playerSize = CGSizeZero;
+	
+	if(self.usesDefaultVideoRatio)
+	{
+		float heightRatio = self.view.bounds.size.height / YouTubeStandardPlayerHeight;
+		float widthRatio = self.view.bounds.size.width / YouTubeStandardPlayerWidth;
+		float ratio = MIN(widthRatio, heightRatio);
+		
+		playerSize = CGSizeMake(YouTubeStandardPlayerWidth * ratio, YouTubeStandardPlayerHeight * ratio);
+	}
+	else
+	{
+		playerSize = CGSizeMake(self.view.bounds.size.width, self.view.bounds.size.height);
+	}
+	
     return playerSize;
 }
 
@@ -169,7 +192,7 @@ const CGFloat YouTubeStandardPlayerHeight = 390;
 
 - (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error
 {
-    LOG_ERROR(error);
+	[self.delegate youTubeVideoViewController:self didReceiveEventNamed:PBYouTubePlayerEventError eventData:nil];
 }
 
 @end
