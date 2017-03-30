@@ -57,6 +57,7 @@ const CGFloat YouTubeStandardPlayerHeight = 390;
     self.webView.backgroundColor = self.view.backgroundColor;
     self.webView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     self.webView.delegate = self;
+	self.webView.scrollView.scrollEnabled = NO;
     [self.view addSubview:self.webView];
 }
 
